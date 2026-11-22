@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daraz Nepal Coffee Scraper | Abhinab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --espresso-950: #16110e;
+      --espresso-900: #231914;
+      --espresso-800: #33241d;
+      --crema: #f85606;
+      --crema-hover: #df4900;
+      --crema-soft: #fff4ed;
+      --gold: #d97706;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --green-bg: #ecfdf5;
+      --green-text: #047857;
+      --blue-bg: #eff6ff;
+      --blue-text: #1d4ed8;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: radial-gradient(circle at 85% 20%, #3b261c 0%, var(--espresso-900) 45%, var(--espresso-950) 100%);
+      color: #f8fafc;
+      padding: 36px 20px 56px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .container { max-width: 1220px; margin: 0 auto; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .snapshot-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #cbd5e1;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.65rem, 3vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+
+    .hero-desc {
+      color: #cbd5e1;
+      font-size: 0.96rem;
+      max-width: 620px;
+      margin-bottom: 18px;
+    }
+
+    .stack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 20px;
+    }
+
+    .stack-tag {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--crema);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .btn-primary:hover { background: var(--crema-hover); transform: translateY(-1px); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+      text-decoration: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.14); }
+
+    /* Developer Profile Card */
+    .dev-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .dev-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .dev-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--crema), #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .dev-name { font-size: 1.05rem; font-weight: 700; color: #ffffff; }
+    .dev-role { font-size: 0.82rem; color: #cbd5e1; }
+
+    .dev-bio {
+      font-size: 0.84rem;
+      color: #cbd5e1;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .dev-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .dev-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #f8fafc;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 5px 11px;
+      border-radius: 7px;
+      transition: all 0.15s ease;
+    }
+
+    .dev-link:hover {
+      background: var(--crema);
+      border-color: var(--crema);
+    }
+
+    /* Collapsible Architecture Drawer */
+    .arch-panel {
+      display: none;
+      margin-top: 22px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .arch-panel.open { display: block; }
+
+    .arch-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .arch-step {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .arch-step-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fb923c;
+      margin-bottom: 4px;
+    }
+
+    .arch-step-title { font-size: 0.92rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .arch-step-desc { font-size: 0.8rem; color: #cbd5e1; }
+
+    /* Main Workspace overlapping hero slightly */
+    .main-content {
+      margin-top: -28px;
+      padding: 0 20px 56px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.15s ease;
+    }
+
+    .stat-card:hover { transform: translateY(-2px); }
+
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    .stat-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--crema-soft);
+      color: var(--crema);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .stat-value { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; }
+    .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-title { font-size: 0.96rem; font-weight: 700; margin-bottom: 2px; }
+    .chart-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
+    .chart-box { position: relative; height: 230px; width: 100%; }
+
+    /* Controls */
+    .controls-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1 1 280px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .search-input:focus { border-color: var(--crema); }
+
+    select {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--surface);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .pill {
+      padding: 6px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill:hover { border-color: var(--crema); }
+    .pill.active {
+      background: var(--crema);
+      color: #ffffff;
+      border-color: var(--crema);
+    }
+
+    /* Data Table */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+
+    th {
+      background: #f8fafc;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .product-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+      max-width: 440px;
+    }
+
+    .thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      background: #f1f5f9;
+    }
+
+    .product-title { font-weight: 600; line-height: 1.35; }
+    .seller-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .badge-type { background: var(--blue-bg); color: var(--blue-text); }
+    .badge-sold { background: var(--crema-soft); color: var(--crema); border-radius: 999px; }
+    .badge-discount { background: var(--green-bg); color: var(--green-text); margin-left: 5px; }
+
+    .value-cell { white-space: nowrap; }
+    .value-main { font-weight: 700; color: var(--green-text); }
+    .value-sub { font-size: 0.78rem; color: var(--muted); }
+
+    .price-main { font-weight: 800; white-space: nowrap; }
+    .price-orig { font-size: 0.78rem; color: var(--muted); text-decoration: line-through; }
+
+    .rating-cell { white-space: nowrap; font-weight: 600; }
+    .rating-sub { font-size: 0.78rem; color: var(--muted); font-weight: 400; }
+
+    .btn-link {
+      display: inline-block;
+      padding: 6px 12px;
+      background: var(--espresso-900);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+
+    .btn-link:hover { background: var(--crema); }
+    .status-box { padding: 36px 16px; text-align: center; color: var(--muted); }
+
+    footer {
+      max-width: 1220px;
+      margin: 28px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--text); font-weight: 600; text-decoration: none; }
+    footer a:hover { color: var(--crema); }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <div class="status-row">
+            <span class="live-pill"><span class="live-dot"></span> Automated ETL Pipeline</span>
+            <span class="snapshot-pill" id="lastUpdated">Loading snapshot...</span>
+          </div>
+          <h1>Daraz Nepal Coffee Scraper</h1>
+          <p class="hero-desc">
+            Data engineering pipeline and market analytics dashboard tracking normalized unit pricing (Rs. / 100g), category share, and sales velocity across Nepal's e-commerce coffee catalog.
+          </p>
+          <div class="stack-tags">
+            <span class="stack-tag">Python 3.13</span>
+            <span class="stack-tag">Scrapy ETL</span>
+            <span class="stack-tag">SQLite Warehouse</span>
+            <span class="stack-tag">Regex Feature Engineering</span>
+            <span class="stack-tag">Pytest CI</span>
+            <span class="stack-tag">GitHub Actions</span>
+            <span class="stack-tag">Chart.js</span>
+          </div>
+          <div class="hero-actions">
+            <a class="btn-primary" href="https://github.com/YOUR_USERNAME/daraz_coffee_scraper" target="_blank" rel="noopener noreferrer">
+              GitHub Repository ↗
+            </a>
+            <button class="btn-ghost" id="toggleArchBtn" type="button">
+              System Architecture &amp; Pipeline
+            </button>
+          </div>
+        </div>
+
+        <aside class="dev-card">
+          <div class="dev-header">
+            <div class="dev-avatar">AB</div>
+            <div>
+              <div class="dev-name">Built by Abhinab</div>
+              <div class="dev-role">Data Engineering &amp; Python Portfolio Project</div>
+            </div>
+          </div>
+          <p class="dev-bio">
+            Designed to demonstrate automated ingestion, regex-based unit normalization, idempotent SQLite historical snapshotting, and zero-backend static deployment.
+          </p>
+          <div class="dev-links">
+            <a class="dev-link" href="https://github.com/ABHINAB-CHHETRI" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            <a class="dev-link" href="https://www.linkedin.com/in/abhinab-chhetri-46b47a350/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+            <a class="dev-link" href="mailto:abhinab2k05.com">Email ↗</a>
+          </div>
+        </aside>
+      </div>
+
+      <div class="arch-panel" id="archPanel">
+        <div class="arch-steps">
+          <div class="arch-step">
+            <div class="arch-step-num">01 · Extraction</div>
+            <div class="arch-step-title">Paginated JSON Ingestion</div>
+            <div class="arch-step-desc">Scrapy queries Daraz's catalog JSON endpoint with AutoThrottle and randomized delays to extract raw pricing, ratings, sellers, and sales counts.</div>
+          </div>
+          <div class="arch-step">
+            <div class="arch-step-num">02 · Transformation</div>
+            <div class="arch-step-title">Regex Cleaning &amp; Unit Math</div>
+            <div class="arch-step-desc">Filters hardware noise, parses weights (g/kg) via regex, classifies roast/coffee types, and computes normalized Rs. / 100g unit economics.</div>
+          </div>
+          <div class="arch-step">
+            <div class="arch-step-num">03 · Storage</div>
+            <div class="arch-step-title">Idempotent SQLite History</div>
+            <div class="arch-step-desc">Upserts master product metadata and timestamped snapshots into SQLite (UNIQUE item_id + date) to compute price changes and sales deltas.</div>
+          </div>
+          <div class="arch-step">
+            <div class="arch-step-num">04 · Automation</div>
+            <div class="arch-step-title">GitHub Actions &amp; Pages</div>
+            <div class="arch-step-desc">Runs pytest unit tests and refreshes the catalog every 3 days with record-count guardrails before deploying static JSON to GitHub Pages.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Tracked SKUs</span>
+            <span class="stat-icon">#</span>
+          </div>
+          <div class="stat-value" id="statCount">—</div>
+          <div class="stat-sub">Deduplicated coffee listings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Median Price / 100g</span>
+            <span class="stat-icon">Rs</span>
+          </div>
+          <div class="stat-value" id="statMedianValue">—</div>
+          <div class="stat-sub">Normalized unit cost</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Cumulative Units Sold</span>
+            <span class="stat-icon">↗</span>
+          </div>
+          <div class="stat-value" id="statTotalSold">—</div>
+          <div class="stat-sub">Across filtered catalog</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Average Rating</span>
+            <span class="stat-icon">★</span>
+          </div>
+          <div class="stat-value" id="statAvgRating">—</div>
+          <div class="stat-sub">Rated products only</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Market Share by Coffee Category</div>
+          <div class="chart-sub">Cumulative units sold across classified product formats</div>
+          <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top Sellers by Volume</div>
+          <div class="chart-sub">Leading Daraz merchants ranked by cumulative units sold</div>
+          <div class="chart-box"><canvas id="sellerChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="controls-card">
+        <div class="controls-top">
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Search brand, product, roast, or seller (e.g., Nyano, Karma, Arabica, Nescafe)..."
+          />
+          <select id="sortSelect">
+            <option value="sold-desc">Sort: Best Selling (High → Low)</option>
+            <option value="value-asc">Sort: Best Value (Lowest Rs. / 100g)</option>
+            <option value="price-asc">Sort: Price (Low → High)</option>
+            <option value="price-desc">Sort: Price (High → Low)</option>
+            <option value="rating-desc">Sort: Highest Rated (min. 5 reviews)</option>
+            <option value="discount-desc">Sort: Biggest Discount %</option>
+          </select>
+        </div>
+        <div class="pills" id="categoryPills"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Product &amp; Seller</th>
+              <th>Category</th>
+              <th>Unit Value</th>
+              <th>Rating</th>
+              <th>Sold</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="status-box">Loading coffee_listings.json...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <footer>
+        <div>
+          Engineered by <strong>Abhinab</strong> · Automated via Scrapy, SQLite &amp; GitHub Actions
+        </div>
+        <div>
+          <a href="https://github.com/YOUR_USERNAME/daraz_coffee_scraper" target="_blank" rel="noopener noreferrer">Source Code</a>
+          &nbsp;·&nbsp;
+          <a href="./coffee_listings.json" target="_blank" rel="noopener noreferrer">Raw JSON Feed</a>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    let allProducts = [];
+    let selectedCategory = 'All';
+    let categoryChartInstance = null;
+    let sellerChartInstance = null;
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text == null ? '' : String(text);
+      return div.innerHTML;
+    }
+
+    function getSoldNum(item) {
+      if (typeof item.sold === 'number') return item.sold;
+      const m = String(item.sold || '').match(/([\d.]+)\s*([kKmM]?)/);
+      if (!m) return 0;
+      let n = parseFloat(m[1]);
+      if (m[2].toUpperCase() === 'K') n *= 1000;
+      if (m[2].toUpperCase() === 'M') n *= 1000000;
+      return Math.round(n);
+    }
+
+    function getPriceNum(item) {
+      if (typeof item.price === 'number') return item.price;
+      const cleaned = String(item.price || '').replace(/rs\.?/i, '').replace(/,/g, '');
+      const m = cleaned.match(/\d+(?:\.\d+)?/);
+      return m ? parseFloat(m[0]) : 0;
+    }
+
+    function buildCategoryPills() {
+      const counts = { All: allProducts.length };
+      allProducts.forEach(p => {
+        const cat = p.coffee_type || 'Other';
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+
+      const order = ['All', 'Whole Beans', 'Ground Coffee', 'Instant', '3-in-1 / Premix', 'Drip Bag', 'Other'];
+      const container = document.getElementById('categoryPills');
+
+      container.innerHTML = order
+        .filter(cat => counts[cat])
+        .map(cat => `
+          <button class="pill ${cat === selectedCategory ? 'active' : ''}" data-cat="${escapeHtml(cat)}">
+            ${escapeHtml(cat)} (${counts[cat]})
+          </button>
+        `).join('');
+
+      container.querySelectorAll('.pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedCategory = btn.dataset.cat;
+          buildCategoryPills();
+          render();
+        });
+      });
+    }
+
+    function updateCharts(items) {
+      const catSales = {};
+      items.forEach(p => {
+        const cat = p.coffee_type || 'Other';
+        catSales[cat] = (catSales[cat] || 0) + getSoldNum(p);
+      });
+
+      if (categoryChartInstance) categoryChartInstance.destroy();
+      categoryChartInstance = new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(catSales),
+          datasets: [{
+            data: Object.values(catSales),
+            backgroundColor: ['#f85606', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#64748b'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter', size: 12 } } }
+          }
+        }
+      });
+
+      const sellerSales = {};
+      items.forEach(p => {
+        const s = p.seller || 'Unknown';
+        sellerSales[s] = (sellerSales[s] || 0) + getSoldNum(p);
+      });
+      const topSellers = Object.entries(sellerSales)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 7);
+
+      if (sellerChartInstance) sellerChartInstance.destroy();
+      sellerChartInstance = new Chart(document.getElementById('sellerChart'), {
+        type: 'bar',
+        data: {
+          labels: topSellers.map(s => s[0].length > 22 ? s[0].slice(0, 22) + '…' : s[0]),
+          datasets: [{
+            label: 'Units Sold',
+            data: topSellers.map(s => s[1]),
+            backgroundColor: '#231914',
+            hoverBackgroundColor: '#f85606',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } },
+            y: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
+          }
+        }
+      });
+    }
+
+    function render() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const sortBy = document.getElementById('sortSelect').value;
+
+      let filtered = allProducts.filter(item => {
+        if (selectedCategory !== 'All' && (item.coffee_type || 'Other') !== selectedCategory) return false;
+        if (query) {
+          const haystack = `${item.name || ''} ${item.seller || ''} ${item.roast_level || ''} ${item.coffee_type || ''}`.toLowerCase();
+          if (!haystack.includes(query)) return false;
+        }
+        return true;
+      });
+
+      if (sortBy === 'sold-desc') {
+        filtered.sort((a, b) => getSoldNum(b) - getSoldNum(a));
+      } else if (sortBy === 'value-asc') {
+        filtered.sort((a, b) => (a.price_per_100g ?? Infinity) - (b.price_per_100g ?? Infinity));
+      } else if (sortBy === 'price-asc') {
+        filtered.sort((a, b) => getPriceNum(a) - getPriceNum(b));
+      } else if (sortBy === 'price-desc') {
+        filtered.sort((a, b) => getPriceNum(b) - getPriceNum(a));
+      } else if (sortBy === 'rating-desc') {
+        filtered.sort((a, b) => {
+          const scoreA = (a.reviews >= 5 && a.rating) ? a.rating : -1;
+          const scoreB = (b.reviews >= 5 && b.rating) ? b.rating : -1;
+          return scoreB - scoreA;
+        });
+      } else if (sortBy === 'discount-desc') {
+        filtered.sort((a, b) => (b.discount_pct || 0) - (a.discount_pct || 0));
+      }
+
+      const count = filtered.length;
+      const totalSold = filtered.reduce((sum, item) => sum + getSoldNum(item), 0);
+
+      const per100Values = filtered
+        .map(i => i.price_per_100g)
+        .filter(v => typeof v === 'number' && v > 0)
+        .sort((a, b) => a - b);
+      const medianPer100 = per100Values.length
+        ? per100Values[Math.floor(per100Values.length / 2)]
+        : null;
+
+      const rated = filtered.filter(i => typeof i.rating === 'number' && i.rating > 0);
+      const avgRating = rated.length
+        ? (rated.reduce((sum, i) => sum + i.rating, 0) / rated.length).toFixed(2)
+        : null;
+
+      document.getElementById('statCount').textContent = count.toLocaleString();
+      document.getElementById('statMedianValue').textContent = medianPer100 ? `Rs. ${Math.round(medianPer100)}` : '—';
+      document.getElementById('statTotalSold').textContent = totalSold.toLocaleString();
+      document.getElementById('statAvgRating').textContent = avgRating ? `${avgRating} ★` : '—';
+
+      updateCharts(filtered);
+
+      const tbody = document.getElementById('tableBody');
+      if (!count) {
+        tbody.innerHTML = `<tr><td colspan="7" class="status-box">No matching coffee products found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => {
+        const priceNum = getPriceNum(item);
+        const priceText = item.price_display || (priceNum ? `Rs. ${Math.round(priceNum).toLocaleString()}` : '—');
+        const soldText = item.sold_display || `${getSoldNum(item).toLocaleString()} sold`;
+
+        const valueHtml = item.price_per_100g
+          ? `<div class="value-main">Rs. ${Math.round(item.price_per_100g)} / 100g</div>
+             <div class="value-sub">${item.weight_grams}g pack</div>`
+          : `<span class="value-sub">Weight N/A</span>`;
+
+        const ratingHtml = item.rating
+          ? `<span>${item.rating.toFixed(1)} ★</span> <span class="rating-sub">(${item.reviews || 0})</span>`
+          : `<span class="rating-sub">No ratings</span>`;
+
+        const discountBadge = item.discount_pct > 0
+          ? `<span class="badge badge-discount">-${item.discount_pct}%</span>`
+          : '';
+
+        const origHtml = (item.original_price && item.original_price > priceNum)
+          ? `<div class="price-orig">Rs. ${Math.round(item.original_price).toLocaleString()}</div>`
+          : '';
+
+        const roastTag = item.roast_level && item.roast_level !== 'Unspecified'
+          ? ` · ${escapeHtml(item.roast_level)} Roast`
+          : '';
+
+        const imgHtml = item.image
+          ? `<img class="thumb" src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.style.display='none'" />`
+          : '';
+
+        return `
+          <tr>
+            <td>
+              <div class="product-cell">
+                ${imgHtml}
+                <div>
+                  <div class="product-title">${escapeHtml(item.name)}</div>
+                  <div class="seller-sub">${escapeHtml(item.seller || 'Daraz Seller')}${roastTag}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-type">${escapeHtml(item.coffee_type || 'Coffee')}</span></td>
+            <td class="value-cell">${valueHtml}</td>
+            <td class="rating-cell">${ratingHtml}</td>
+            <td><span class="badge badge-sold">${escapeHtml(soldText)}</span></td>
+            <td>
+              <div class="price-main">${escapeHtml(priceText)}${discountBadge}</div>
+              ${origHtml}
+            </td>
+            <td><a class="btn-link" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">View ↗</a></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function init() {
+      try {
+        const res = await fetch('./coffee_listings.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allProducts = await res.json();
+
+        const latestDate = allProducts[0]?.scraped_date || 'Latest';
+        document.getElementById('lastUpdated').textContent = `Snapshot: ${latestDate}`;
+
+        buildCategoryPills();
+        render();
+      } catch (err) {
+        document.getElementById('tableBody').innerHTML = `
+          <tr>
+            <td colspan="7" class="status-box">
+              Could not load <strong>coffee_listings.json</strong>. Serve <code>public/</code> over HTTP:<br />
+              <code>python -m http.server 8080 --directory public</code>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    document.getElementById('toggleArchBtn').addEventListener('click', () => {
+      document.getElementById('archPanel').classList.toggle('open');
+    });
+    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('sortSelect').addEventListener('change', render);
+
+    init();
+  </script>
+</body>
+</html>

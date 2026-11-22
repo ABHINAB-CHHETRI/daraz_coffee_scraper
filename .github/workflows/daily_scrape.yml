@@ -1,0 +1,59 @@
+name: Daily Coffee Market Pipeline
+
+on:
+  schedule:
+    - cron: "0 2 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  scrape-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest -v
+
+      - name: Run Scrapy ETL pipeline
+        working-directory: coffee_scraper
+        run: scrapy crawl coffee_spider
+
+      - name: Validate output & commit snapshot
+        run: |
+          COUNT=$(python -c "import json; print(len(json.load(open('public/coffee_listings.json', encoding='utf-8'))))")
+          echo "Scraped items: $COUNT"
+          if [ "$COUNT" -lt 20 ]; then
+            echo "Too few items scraped (possible anti-bot block). Keeping previous snapshot."
+            git checkout -- public/coffee_listings.json
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/coffee_history.db public/coffee_listings.json
+          git diff --staged --quiet || git commit -m "chore: update daily coffee market snapshot ($(date -u +%F))"
+          git push
+
+      - name: Upload public folder to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
